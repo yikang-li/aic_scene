@@ -8,7 +8,7 @@ from .utils import set_trainable, set_trainable_param
 import pdb
 
 import sys
-sys.path.append('vqa/external/pretrained-models.pytorch')
+sys.path.append('external/pretrained_models')
 import pretrainedmodels as torch7_models
 
 pytorch_resnet_names = sorted(name for name in pytorch_models.__dict__
@@ -23,26 +23,26 @@ torch7_resnet_names = sorted(name for name in torch7_models.__dict__
 model_names = pytorch_resnet_names + torch7_resnet_names
 
 
-def factory(arch):
+def factory(arch, dilation=1):
 
     if arch in pytorch_resnet_names:
-        model = pytorch_models.__dict__[opt['arch']](pretrained=True)
+        model = pytorch_models.__dict__[arch](pretrained=True)
 
         
 
     elif arch == 'fbresnet152':
-        model = torch7_models.__dict__[opt['arch']](num_classes=1000,
+        model = torch7_models.__dict__[arch](num_classes=1000,
                                                     pretrained='imagenet')
 
     elif arch in torch7_resnet_names:
-        model = torch7_models.__dict__[opt['arch']](num_classes=1000,
+        model = torch7_models.__dict__[arch](num_classes=1000,
                                                     pretrained='imagenet')
     else:
         raise ValueError
 
     # As utilizing the pretrained_model on 224 image, 
     # when applied on 448 images, please set the corresponding [dilation]
-    set_dilation(model, opt.get('dilation', 1))
+    set_dilation(model, dilation)
 
     return model
 

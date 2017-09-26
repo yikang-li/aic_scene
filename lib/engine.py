@@ -1,14 +1,9 @@
 import time
 import torch
-import pdb
 import numpy as np
 from torch.autograd import Variable
-import vqa.lib.utils as utils
+import lib.utils as utils
 import torch.nn.functional as F
-from torch.nn.utils.rnn import pack_padded_sequence
-from nltk.translate.bleu_score import modified_precision as bleu_score
-from models.criterions import *
-from models.utils import translate_tokens, calculate_bleu_score
 
 
 
@@ -54,7 +49,7 @@ def train(loader, model, optimizer, logger, epoch, print_freq=10):
                   'Acc@3 {acc3.avg:.3f}\t'.format(
                    epoch, i + 1, len(loader),
                    batch_time=meters['batch_time'], data_time=meters['data_time'],
-                   acc1=meters['acc1'], acc5=meters['acc3'], 
+                   acc1=meters['acc1'], acc3=meters['acc3'], 
                    loss=meters['loss']))
 
     print('[Train]\tEpoch: [{0}] '
@@ -65,7 +60,7 @@ def train(loader, model, optimizer, logger, epoch, print_freq=10):
                   'Acc@3 {acc3.avg:.3f}\t'.format(
                    epoch, 
                    batch_time=meters['batch_time'], data_time=meters['data_time'],
-                   acc1=meters['acc1'], acc5=meters['acc3'], 
+                   acc1=meters['acc1'], acc3=meters['acc3'], 
                    loss=meters['loss']))
 
     logger.log_meters('train', n=epoch)
@@ -112,7 +107,7 @@ def validate(loader, model, logger, epoch=0, print_freq=100):
                   'Acc@3 {acc3.avg:.3f}\t'.format(
                    epoch, i + 1, len(loader),
                    batch_time=meters['batch_time'], data_time=meters['data_time'],
-                   acc1=meters['acc1'], acc5=meters['acc3'], 
+                   acc1=meters['acc1'], acc3=meters['acc3'], 
                    loss=meters['loss']))
 
     print('[Val]\tEpoch: [{0}] '
@@ -123,7 +118,7 @@ def validate(loader, model, logger, epoch=0, print_freq=100):
                   'Acc@3 {acc3.avg:.3f}\t'.format(
                    epoch, 
                    batch_time=meters['batch_time'], data_time=meters['data_time'],
-                   acc1=meters['acc1'], acc5=meters['acc3'], 
+                   acc1=meters['acc1'], acc3=meters['acc3'], 
                    loss=meters['loss']))
 
     logger.log_meters('val', n=epoch)
@@ -156,8 +151,7 @@ def evaluate(loader, model, logger, epoch=0, print_freq=100):
         end = time.time()
 
         if (i + 1) % print_freq == 0:
-            print('[Evaluation] {0}/{1} batches processed'format(
-                   i + 1, len(loader)))
+            print('[Evaluation] {0}/{1} batches processed'.format(i + 1, len(loader)))
 
     logger.log_meters('test', n=epoch)
 

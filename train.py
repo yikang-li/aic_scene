@@ -56,7 +56,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation and test set')
 parser.add_argument('-j', '--workers', default=4, type=int,
                     help='number of data loading workers')
-parser.add_argument('--print_freq', '-p', default=1000, type=int,
+parser.add_argument('--print_freq', '-p', default=100, type=int,
                     help='print frequency')
 ################################################
 parser.add_argument('-ho', '--help_opt', dest='help_opt', action='store_true',
@@ -102,12 +102,12 @@ def main():
     # Set datasets
     print('Loading dataset....',)
     trainset = datasets.Scene(options['data']['trainsplit'], options['data'], is_testing=False)
-    train_loader = trainset.data_loader(batch_size=options['optim']['batch_size'],
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=options['optim']['batch_size'],
                                         num_workers=args.workers,
-                                        shuffle=True)            
+                                        shuffle=True, pin_memory=True, drop_last=True)            
     valset = datasets.Scene('val', options['data'], is_testing=True)
-    val_loader = valset.data_loader(batch_size=options['optim']['batch_size'],
-                                    num_workers=args.workers)
+    val_loader = torch.utils.data.DataLoader(trainset, batch_size=options['optim']['batch_size'],
+                                    num_workers=args.workers, pin_memory=True)
     print('Done.')
     print('Setting up the model...')
 
@@ -147,7 +147,7 @@ def main():
         exp_logger = logger.Experiment(exp_name, options)
         exp_logger.add_meters('train', make_meters())
         exp_logger.add_meters('test', make_meters())
-        if options['vqa']['trainsplit'] == 'train':
+        if options['data']['trainsplit'] == 'train':
             exp_logger.add_meters('val', make_meters())
         exp_logger.info['model_params'] = utils.params_count(model)
         print('Model has {} parameters'.format(exp_logger.info['model_params']))
@@ -160,9 +160,8 @@ def main():
 
         evaluate_result = engine.evaluate(test_loader, model, exp_logger, args.print_freq)
     
-        pdb.set_trace()
         save_results(evaluate_result, args.start_epoch, valset.split_name(),
-                         options['logs']['dir_logs'], options['vqa']['dir'])
+                         options['logs']['dir_logs'])
 
         return
 
@@ -179,11 +178,9 @@ def main():
         #     to_set_trainable = False
         # optimizer = adjust_optimizer(optimizer, epoch, regime)
         engine.train(train_loader, model, optimizer,
-                      exp_logger, epoch, args.print_freq, 
-                      dual_training=args.dual_training, 
-                      alternative_train=args.alternative_train)
+                      exp_logger, epoch, args.print_freq) 
 
-        if options['vqa']['trainsplit'] == 'train':
+        if options['data']['trainsplit'] == 'train':
             # evaluate on validation set
             acc1, acc3 = engine.validate(test_loader, model,
                                                 exp_logger, epoch, args.print_freq)
@@ -191,7 +188,7 @@ def main():
                 #print('[epoch {}] evaluation:'.format(epoch))
                 evaluate_result = engine.evaluate(test_loader, model, exp_logger, args.print_freq)   #model.module, exp_logger, args.print_freq)
                 save_results(evaluate_result, epoch, valset.split_name(),
-                         options['logs']['dir_logs'], options['vqa']['dir'], is_testing=False)
+                         options['logs']['dir_logs'], is_testing=False)
 
             # remember best prec@1 and save checkpoint
             is_best = acc3 > best_acc3
@@ -228,7 +225,7 @@ def make_meters():
     }
     return meters_dict
 
-def save_results(results, epoch, split_name, dir_logs, dir_vqa, is_testing=True):
+def save_results(results, epoch, split_name, dir_logs, is_testing=True):
     if is_testing:
         subfolder_name = 'evaluate'
     else:
