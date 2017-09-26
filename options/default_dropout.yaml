@@ -25,6 +25,7 @@ logs:
 optim:
     batch_size: 512
     lr: 0.001
+    dropout: 0.3
     weight_decay: 0.0005
     epochs: 10
     eval_epochs: 5

@@ -108,6 +108,10 @@ def main():
     valset = datasets.Scene('val', options['data'], is_testing=True)
     val_loader = torch.utils.data.DataLoader(trainset, batch_size=options['optim']['batch_size'],
                                     num_workers=args.workers, pin_memory=True)
+
+    valset = datasets.Scene('test', options['data'], is_testing=True)
+    test_loader = torch.utils.data.DataLoader(trainset, batch_size=options['optim']['batch_size'],
+                                    num_workers=args.workers, pin_memory=True)
     print('Done.')
     print('Setting up the model...')
 
@@ -115,15 +119,13 @@ def main():
     # assert options['model']['arch_resnet'] == options['coco']['arch'], 'Two [arch] should be set the same.'
     model = getattr(models, options['model']['arch'])(options['model'])
 
-    optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()), 
-        lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
-
     # Optionally resume from a checkpoint
     exp_logger = None
     if args.resume:
         print('Loading saved model...')
         args.start_epoch, best_acc3, exp_logger = load_checkpoint(model, optimizer,#model.module, optimizer,
             os.path.join(options['logs']['dir_logs'], args.resume))
+        model.features.set_trainable(True)
     else:
         # Or create logs directory
         if os.path.isdir(options['logs']['dir_logs']):
@@ -140,7 +142,10 @@ def main():
             yaml.dump(options, f, default_flow_style=False)
         with open(path_args, 'w') as f:
             yaml.dump(vars(args), f, default_flow_style=False)
-        
+
+        print('Fix the pretrained parameters for one epoch')
+        model.features.set_trainable(False)
+
     if exp_logger is None:
         # Set loggers
         exp_name = os.path.basename(options['logs']['dir_logs']) # add timestamp
@@ -182,7 +187,7 @@ def main():
 
         if options['data']['trainsplit'] == 'train':
             # evaluate on validation set
-            acc1, acc3 = engine.validate(test_loader, model,
+            acc1, acc3 = engine.validate(val_loader, model,
                                                 exp_logger, epoch, args.print_freq)
             if (epoch + 1) % options['optim']['eval_epochs'] == 0:
                 #print('[epoch {}] evaluation:'.format(epoch))
@@ -212,6 +217,11 @@ def main():
                 is_best)
         else:
             raise NotImplementedError
+
+        if epoch == 0 and not args.resume:
+            model.module.features.set_trainable(True)
+            optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.module.parameters()), 
+                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
     
 
 def make_meters():  
