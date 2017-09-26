@@ -30,7 +30,7 @@ class Scene(data.Dataset):
                     annotations = json.load(f)
                     for item in annotations:
                         item['subfolder'] = opts['val']['im_dir']
-	        	self.annotations.append(annotations)
+                    self.annotations.append(annotations)
         elif split == 'val':
             with open(osp.join(opts['root_dir'], opts['val']['annotation']), 'r') as f:
                 annotations = json.load(f)
@@ -38,17 +38,17 @@ class Scene(data.Dataset):
                     item['subfolder'] = opts['val']['im_dir']
             self.annotations = annotations
         else:
-        	self.annotations = []
-        	for item in os.listdir(osp.join(self.root_dir, opts[split]['im_dir'])):
-        		if os.path.isfile(osp.join(self.root_dir, opts[split]['im_dir'], item)):
-        			self.annotations.append({'image_id': item, 
-        					'subfolder': opts[split]['im_dir']})
+            self.annotations = []
+            for item in os.listdir(osp.join(self.root_dir, opts[split]['im_dir'])):
+                if os.path.isfile(osp.join(self.root_dir, opts[split]['im_dir'], item)):
+                    self.annotations.append({'image_id': item, 
+                        'subfolder': opts[split]['im_dir']})
 
         # image transform
         if is_testing:
             if self.opts['crop']:
-            	self.transform = transforms.Compose([ 
-                	transforms.Scale([opts['scale_size'], opts['scale_size']]), # we scale the image in advance
+                self.transform = transforms.Compose([ 
+                    transforms.Scale([opts['scale_size'], opts['scale_size']]), # we scale the image in advance
                     transforms.CenterCrop(opts['img_size']),
                     transforms.ToTensor(),
                     transforms.Normalize(**self.normalize)
@@ -70,8 +70,8 @@ class Scene(data.Dataset):
                 ])
             else:
 
-                self.transform = transforms.Compose([ 
-                	transforms.Scale([opts['scale_size'], opts['scale_size']]), # We scale the image in advance
+                self.transform = transforms.Compose([
+                    transforms.Scale([opts['scale_size'], opts['scale_size']]), # We scale the image in advance
                     transforms.RandomCrop(opts['img_size']),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
@@ -92,7 +92,7 @@ class Scene(data.Dataset):
         item['visual'] = img
         item['image_id'] = self.annotations[index]['image_id']
         try:
-        	item['label'] = int(self.annotations[index]['label_id'])
+            item['label'] = int(self.annotations[index]['label_id'])
         except:
-        	pass
+            pass
         return item
