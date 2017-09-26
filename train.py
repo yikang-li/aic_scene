@@ -118,7 +118,11 @@ def main():
     # Set model, criterion and optimizer
     # assert options['model']['arch_resnet'] == options['coco']['arch'], 'Two [arch] should be set the same.'
     model = getattr(models, options['model']['arch'])(options['model'])
-
+    optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
+                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
+                    momentum=0.9)
+    regime = lambda e: {'lr': options['optim']['lr'] * (options['optim']['lr_decay'] ** int(e / options['optim']['lr_decay_epoch'])),
+                        'weight_decay': options['optim']['weight_decay'], 'momentum': 0.9}
     # Optionally resume from a checkpoint
     exp_logger = None
     if args.resume:
@@ -145,9 +149,9 @@ def main():
 
         print('Fix the pretrained parameters for one epoch')
         model.features.set_trainable(False)
-
-    optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()), 
-                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
+        optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
+                        lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
+                        momentum=0.9)
 
     if exp_logger is None:
         # Set loggers
@@ -225,6 +229,7 @@ def main():
             model.module.features.set_trainable(True)
             optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.module.parameters()), 
                     lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
+        optimizer = adjust_optimizer(optimizer, epoch, regime)
     
 
 def make_meters():  
