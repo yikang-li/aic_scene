@@ -118,18 +118,18 @@ def main():
     # Set model, criterion and optimizer
     # assert options['model']['arch_resnet'] == options['coco']['arch'], 'Two [arch] should be set the same.'
     model = getattr(models, options['model']['arch'])(options['model'])
-    optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
-                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
-                    momentum=0.9)
     regime = lambda e: {'lr': options['optim']['lr'] * (options['optim']['lr_decay'] ** int(e / options['optim']['lr_decay_epoch'])),
                         'weight_decay': options['optim']['weight_decay'], 'momentum': 0.9}
     # Optionally resume from a checkpoint
     exp_logger = None
     if args.resume:
         print('Loading saved model...')
-        args.start_epoch, best_acc3, exp_logger = load_checkpoint(model, optimizer,#model.module, optimizer,
+        args.start_epoch, best_acc3, exp_logger = load_checkpoint(model,#model.module, optimizer,
             os.path.join(options['logs']['dir_logs'], args.resume))
         model.features.set_trainable(True)
+        optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
+                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
+                    momentum=0.9)
     else:
         # Or create logs directory
         if os.path.isdir(options['logs']['dir_logs']):
@@ -171,7 +171,7 @@ def main():
 
         evaluate_result = engine.evaluate(test_loader, model, exp_logger, args.print_freq)
     
-        save_results(evaluate_result, args.start_epoch, valset.split_name(),
+        save_results(evaluate_result, args.start_epoch, testset.split,
                          options['logs']['dir_logs'])
 
         return
@@ -198,7 +198,7 @@ def main():
             if (epoch + 1) % options['optim']['eval_epochs'] == 0:
                 #print('[epoch {}] evaluation:'.format(epoch))
                 evaluate_result = engine.evaluate(test_loader, model, exp_logger, args.print_freq)   #model.module, exp_logger, args.print_freq)
-                save_results(evaluate_result, epoch, valset.split_name(),
+                save_results(evaluate_result, epoch, testset.split_name(),
                          options['logs']['dir_logs'], is_testing=False)
 
             # remember best prec@1 and save checkpoint
@@ -256,15 +256,13 @@ def save_results(results, epoch, split_name, dir_logs, is_testing=True):
     with open(path_rslt, 'w') as handle:
         json.dump(results, handle)
 
-def save_checkpoint(info, model, optim, dir_logs, save_model, save_all_from=None, is_best=True):
+def save_checkpoint(info, model, dir_logs, save_model, save_all_from=None, is_best=True):
     os.system('mkdir -p ' + dir_logs)
     if save_all_from is None:
         path_ckpt_info  = os.path.join(dir_logs, 'ckpt_info.pth.tar')
         path_ckpt_model = os.path.join(dir_logs, 'ckpt_model.pth.tar')
-        path_ckpt_optim = os.path.join(dir_logs, 'ckpt_optim.pth.tar')
         path_best_info  = os.path.join(dir_logs, 'best_info.pth.tar')
         path_best_model = os.path.join(dir_logs, 'best_model.pth.tar')
-        path_best_optim = os.path.join(dir_logs, 'best_optim.pth.tar')
         # save info & logger
         path_logger = os.path.join(dir_logs, 'logger.json')
         info['exp_logger'].to_json(path_logger)
@@ -274,15 +272,12 @@ def save_checkpoint(info, model, optim, dir_logs, save_model, save_all_from=None
         # save model state & optim state
         if save_model:
             torch.save(model, path_ckpt_model)
-            torch.save(optim, path_ckpt_optim)
             if is_best:
                 shutil.copyfile(path_ckpt_model, path_best_model)
-                shutil.copyfile(path_ckpt_optim, path_best_optim)
     else:
         is_best = False # because we don't know the test accuracy
         path_ckpt_info  = os.path.join(dir_logs, 'ckpt_epoch,{}_info.pth.tar')
         path_ckpt_model = os.path.join(dir_logs, 'ckpt_epoch,{}_model.pth.tar')
-        path_ckpt_optim = os.path.join(dir_logs, 'ckpt_epoch,{}_optim.pth.tar')
         # save info & logger
         path_logger = os.path.join(dir_logs, 'logger.json')
         info['exp_logger'].to_json(path_logger)
@@ -290,18 +285,15 @@ def save_checkpoint(info, model, optim, dir_logs, save_model, save_all_from=None
         # save model state & optim state
         if save_model:
             torch.save(model, path_ckpt_model.format(info['epoch']))
-            torch.save(optim, path_ckpt_optim.format(info['epoch']))
         if  info['epoch'] > 1 and info['epoch'] < save_all_from + 1:
             os.system('rm ' + path_ckpt_info.format(info['epoch'] - 1))
             os.system('rm ' + path_ckpt_model.format(info['epoch'] - 1))
-            os.system('rm ' + path_ckpt_optim.format(info['epoch'] - 1))
     if not save_model:
         print('Warning train.py: checkpoint not saved')
 
-def load_checkpoint(model, optimizer, path_ckpt):
+def load_checkpoint(model, path_ckpt):
     path_ckpt_info  = path_ckpt + '_info.pth.tar'
     path_ckpt_model = path_ckpt + '_model.pth.tar'
-    path_ckpt_optim = path_ckpt + '_optim.pth.tar'
     if os.path.isfile(path_ckpt_info):
         info = torch.load(path_ckpt_info)
         start_epoch = 0
@@ -326,11 +318,6 @@ def load_checkpoint(model, optimizer, path_ckpt):
         model.load_state_dict(model_state)
     else:
         print("Warning train.py: no model checkpoint found at '{}'".format(path_ckpt_model))
-    #  if os.path.isfile(path_ckpt_optim):
-    #      optim_state = torch.load(path_ckpt_optim)
-    #      optimizer.load_state_dict(optim_state)
-    #  else:
-    #      print("Warning train.py: no optim checkpoint found at '{}'".format(path_ckpt_optim))
     print("=> loaded checkpoint '{}' (epoch {}, best_acc3 {})"
               .format(path_ckpt, start_epoch, best_acc3))
     return start_epoch, best_acc3, exp_logger

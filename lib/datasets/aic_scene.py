@@ -18,6 +18,7 @@ class Scene(data.Dataset):
         self.opts = opts
         self.root_dir = opts['root_dir']
         self.testing = is_testing
+        self.split = split
         # loading training annotations
         if 'train' in split: # loading train and val set
             with open(osp.join(opts['root_dir'], opts['train']['annotation']), 'r') as f:
