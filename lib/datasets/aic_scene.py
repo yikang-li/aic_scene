@@ -20,23 +20,29 @@ class Scene(data.Dataset):
         self.testing = is_testing
         # loading training annotations
         if 'train' in split: # loading train and val set
-        	with open(osp.join(opts['root_dir'], opts['train']['annotation']), 'r') as f:
-        		annotations = json.load(f)
+            with open(osp.join(opts['root_dir'], opts['train']['annotation']), 'r') as f:
+        	annotations = json.load(f)
         	for item in annotations:
         		item['subfolder'] = opts['train']['im_dir']
         	self.annotations = annotations
-	        if split == 'trainval':
-	        	with open(osp.join(opts['root_dir'], opts['val']['annotation']), 'r') as f:
-	        		annotations = json.load(f)
-	        	for item in annotations:
-	        		item['subfolder'] = opts['val']['im_dir']
+	    if split == 'trainval':
+	       	with open(osp.join(opts['root_dir'], opts['val']['annotation']), 'r') as f:
+	       		annotations = json.load(f)
+	           	for item in annotations:
+	                	item['subfolder'] = opts['val']['im_dir']
 	        	self.annotations.append(annotations)
+        elif split == 'val': 
+            with open(osp.join(opts['root_dir'], opts['val']['annotation']), 'r') as f:
+	        annotations = json.load(f)
+	    for item in annotations:
+                item['subfolder'] = opts['val']['im_dir']
+	    self.annotations = annotations
         else:
         	self.annotations = []
-        	for item in os.listdir(osp.join(self.root_dir, opts['test']['im_dir'])):
-        		if os.path.isfile(osp.join(self.root_dir, opts['test']['im_dir'], item)):
+        	for item in os.listdir(osp.join(self.root_dir, opts[split]['im_dir'])):
+        		if os.path.isfile(osp.join(self.root_dir, opts[split]['im_dir'], item)):
         			self.annotations.append({'image_id': item, 
-        					'subfolder': opts['test']['im_dir']})
+        					'subfolder': opts[split]['im_dir']})
 
         # image transform
         if is_testing:

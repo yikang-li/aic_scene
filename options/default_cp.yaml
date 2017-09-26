@@ -13,7 +13,7 @@ data:
     scale_size: 256
     img_size: 224
     crop: True
-    rand_size_crop: False
+    rand_size_crop: True
 model:
     arch: Baseline_v1
     conv_arch: fbresnet152
@@ -22,11 +22,10 @@ model:
 
 
 logs:
-    dir_logs: output/Scene/baseline_v1
+    dir_logs: output/Scene/baseline_v1_rand_scale_crop
 optim:
     batch_size: 512
     lr: 0.001
-    dropout: 0.3
     weight_decay: 0.0005
     epochs: 10
     eval_epochs: 5
