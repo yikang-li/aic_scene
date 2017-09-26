@@ -17,8 +17,8 @@ class Baseline_v1(nn.Module):
 
     def forward(self, imgs):
         imgs = self.features(imgs)
-        if 'dropout' in opts.keys():
-        	imgs = F.dropout(imgs, opts['dropout'], training=self.training)
+        if 'dropout' in self.opts.keys():
+        	imgs = F.dropout(imgs, self.opts['dropout'], training=self.training)
         pred = self.classifier(imgs)
         return pred
 
@@ -31,10 +31,10 @@ class Baseline_v2(Baseline_v1):
 
     def forward(self, imgs):
         imgs = F.relu(self.features(imgs))
-        if 'dropout' in opts.keys():
-        	imgs = F.dropout(imgs, opts['dropout'], training=self.training)
+        if 'dropout' in self.opts.keys():
+        	imgs = F.dropout(imgs, self.opts['dropout'], training=self.training)
         imgs = self.fc6(imgs)
-        if 'dropout' in opts.keys():
-        	imgs = F.dropout(imgs, opts['dropout'], training=self.training)
+        if 'dropout' in self.opts.keys():
+        	imgs = F.dropout(imgs, self.opts['dropout'], training=self.training)
         pred = self.classifier(imgs)
         return pred

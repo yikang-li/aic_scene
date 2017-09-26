@@ -106,11 +106,11 @@ def main():
                                         num_workers=args.workers,
                                         shuffle=True, pin_memory=True, drop_last=True)            
     valset = datasets.Scene('val', options['data'], is_testing=True)
-    val_loader = torch.utils.data.DataLoader(trainset, batch_size=options['optim']['batch_size'],
+    val_loader = torch.utils.data.DataLoader(valset, batch_size=options['optim']['batch_size'],
                                     num_workers=args.workers, pin_memory=True)
 
-    valset = datasets.Scene('test', options['data'], is_testing=True)
-    test_loader = torch.utils.data.DataLoader(trainset, batch_size=options['optim']['batch_size'],
+    testset = datasets.Scene('test', options['data'], is_testing=True)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=options['optim']['batch_size'],
                                     num_workers=args.workers, pin_memory=True)
     print('Done.')
     print('Setting up the model...')
@@ -145,6 +145,9 @@ def main():
 
         print('Fix the pretrained parameters for one epoch')
         model.features.set_trainable(False)
+
+    optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()), 
+                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
 
     if exp_logger is None:
         # Set loggers

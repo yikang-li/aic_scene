@@ -1,13 +1,6 @@
-data/coco
-data/porting
-data/skip-thoughts
-data/vqa
-data/vqa2
+data/
 
-logs/porting
-logs/vqa_old
-logs/vqa
-logs/vqa2
+logs/
 logs
 
 # Byte-compiled / optimized / DLL files

@@ -40,20 +40,37 @@ class Scene(data.Dataset):
 
         # image transform
         if is_testing:
-        	self.transform = transforms.Compose([ 
-            	transforms.Scale(opts['scale_size']), # we scale the image in advance
-                transforms.CenterCrop(opts['img_size']),
-                transforms.ToTensor(),
-                transforms.Normalize(**self.normalize)
-            ])
+            if self.opts['crop']:
+            	self.transform = transforms.Compose([ 
+                	transforms.Scale([opts['scale_size'], opts['scale_size']]), # we scale the image in advance
+                    transforms.CenterCrop(opts['img_size']),
+                    transforms.ToTensor(),
+                    transforms.Normalize(**self.normalize)
+                ])
+            else:
+                self.transform = transforms.Compose([ 
+                    transforms.Scale([opts['img_size'], opts['img_size']]), 
+                    transforms.ToTensor(),
+                    transforms.Normalize(**self.normalize)
+                ])
         else:
-            self.transform = transforms.Compose([ 
-            	transforms.Scale(opts['scale_size']), # We scale the image in advance
-                transforms.RandomCrop(opts['img_size']),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize(**self.normalize)
-            ])
+            if self.opts.get('rand_size_crop', False):
+                self.transform = transforms.Compose([ 
+                    transforms.RandomSizedCrop(opts['scale_size']), # We scale the image in advance
+                    transforms.Scale([opts['img_size'], opts['img_size']]),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                    transforms.Normalize(**self.normalize)
+                ])
+            else:
+
+                self.transform = transforms.Compose([ 
+                	transforms.Scale([opts['scale_size'], opts['scale_size']]), # We scale the image in advance
+                    transforms.RandomCrop(opts['img_size']),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                    transforms.Normalize(**self.normalize)
+                ])
 
 
     def __len__(self):

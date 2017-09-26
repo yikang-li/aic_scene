@@ -12,7 +12,8 @@ data:
     trainsplit: train
     scale_size: 256
     img_size: 224
-    crop: False
+    crop: True
+    rand_size_crop: False
 model:
     arch: Baseline_v1
     conv_arch: fbresnet152
@@ -21,7 +22,7 @@ model:
 
 
 logs:
-    dir_logs: output/Scene/baseline
+    dir_logs: output/Scene/baseline_v1_dropout
 optim:
     batch_size: 512
     lr: 0.001
