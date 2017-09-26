@@ -1,0 +1,29 @@
+data:
+    root_dir: /home/ykli/workspace/dataset/ai_challenger_scene
+    train:
+        im_dir: scene_train_images_20170904
+        annotation: scene_train_annotations_20170904.json
+    val:
+        im_dir: scene_validation_images_20170908
+        annotation: scene_validation_annotations_20170908.json
+    test:
+        im_dir: scene_test_a_images_20170922
+
+    trainsplit: train
+    scale_size: 256
+    img_size: 224
+    crop: False
+model:
+    arch: Baseline
+    conv_arch: fbresnet152
+    pooling: True
+
+
+logs:
+    dir_logs: output/Scene/baseline
+optim:
+    batch_size: 512
+    lr: 0.001
+    weight_decay: 0.0005
+    epochs: 10
+    eval_epochs: 5
