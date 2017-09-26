@@ -149,9 +149,8 @@ def main():
 
         print('Fix the pretrained parameters for one epoch')
         model.features.set_trainable(False)
-        optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
-                        lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
-                        momentum=0.9)
+        optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()), 
+                        lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
 
     if exp_logger is None:
         # Set loggers
@@ -227,8 +226,9 @@ def main():
 
         if epoch == 0 and not args.resume:
             model.module.features.set_trainable(True)
-            optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.module.parameters()), 
-                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
+            optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
+                    lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
+                    momentum=0.9)
         optimizer = adjust_optimizer(optimizer, epoch, regime)
     
 

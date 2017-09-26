@@ -141,7 +141,7 @@ def evaluate(loader, model, logger, epoch=0, print_freq=100):
         input_visual = Variable(sample['visual'].cuda(), volatile=True)
         # compute output
         output =  model(input_visual)
-        top3_result = output.cpu().data.topk(3, 1, largest=True, sorted=True)
+        top3_result = output.cpu().data.topk(3, 1, largest=True, sorted=True)[0]
         for j in range(batch_size):
             result = {'image_id': sample['image_id'], 
                       'label_id': [top3_result[j].tolist()]}
