@@ -29,4 +29,4 @@ optim:
     dropout: 0.3
     weight_decay: 0.0005
     epochs: 10
-    eval_epochs: 5
+    eval_epochs: 1
