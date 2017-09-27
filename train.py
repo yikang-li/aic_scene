@@ -12,6 +12,7 @@ import torch.backends.cudnn as cudnn
 
 from lib import utils,logger, engine
 import lib.datasets as datasets
+from models.utils import adjust_optimizer
 
 # task specific package
 import models
@@ -40,8 +41,7 @@ parser.add_argument('-b', '--batch_size', type=int,
                     help='mini-batch size')
 parser.add_argument('--epochs', type=int,
                     help='number of total epochs to run')
-parser.add_argument('--eval_epochs', type=int, default=10,
-                    help='Number of epochs to evaluate the model')
+parser.add_argument('--eval_epochs', type=int, help='Number of epochs to evaluate the model')
 # options not in yaml file          
 parser.add_argument('--start_epoch', default=0, type=int,
                     help='manual epoch number (useful on restarts)')
@@ -198,7 +198,7 @@ def main():
             if (epoch + 1) % options['optim']['eval_epochs'] == 0:
                 #print('[epoch {}] evaluation:'.format(epoch))
                 evaluate_result = engine.evaluate(test_loader, model, exp_logger, args.print_freq)   #model.module, exp_logger, args.print_freq)
-                save_results(evaluate_result, epoch, testset.split_name(),
+                save_results(evaluate_result, epoch, testset.split,
                          options['logs']['dir_logs'], is_testing=False)
 
             # remember best prec@1 and save checkpoint
@@ -216,7 +216,6 @@ def main():
                     'exp_logger': exp_logger
                 },
                 model.module.state_dict(), #model.module.state_dict(),
-                optimizer.state_dict(),
                 options['logs']['dir_logs'],
                 args.save_model,
                 args.save_all_from,

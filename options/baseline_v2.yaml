@@ -15,20 +15,20 @@ data:
     crop: False
     rand_size_crop: True
 model:
-    arch: Baseline_v1
+    arch: Baseline_v2
     conv_arch: fbresnet152
     pooling: True
-    dropout: 0.3
+    dropout: 0.5
 
 
 logs:
-    dir_logs: output/Scene/baseline_v1
+    dir_logs: output/Scene/baseline_v2
 optim:
     batch_size: 512
     lr: 0.01
     lr_decay: 0.1
-    lr_decay_epoch: 5
-    dropout: 0.3
+    lr_decay_epoch: 10
+    dropout: 0.5
     weight_decay: 0.0005
-    epochs: 30
+    epochs: 40
     eval_epochs: 5
