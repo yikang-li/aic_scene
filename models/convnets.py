@@ -1,4 +1,5 @@
 import copy
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,7 +15,7 @@ import pretrainedmodels as torch7_models
 pytorch_resnet_names = sorted(name for name in pytorch_models.__dict__
     if name.islower()
     and name.startswith("resnet")
-    and callable(pytorch_models.__dict__[name]))
+    and callable(pytorch_models.__dict__[name])) #     
 
 torch7_resnet_names = sorted(name for name in torch7_models.__dict__
     if name.islower()
@@ -28,7 +29,13 @@ def factory(arch, dilation=1):
     if arch in pytorch_resnet_names:
         model = pytorch_models.__dict__[arch](pretrained=True)
 
-        
+    elif arch == 'densenet_places':
+        if not os.acess('./data/models/whole_densenet161_places365.pth.tar', os.R_OK):
+            os.system('mkdir -p ./data/models/')
+            os.system('wget http://places2.csail.mit.edu/models_places365/whole_densenet161_places365.pth.tar')
+            os.system('mv whole_densenet161_places365.pth.tar ./data/models/whole_densenet161_places365.pth.tar')
+
+        model = torch.load('./data/models/whole_densenet161_places365.pth.tar')
 
     elif arch == 'fbresnet152':
         model = torch7_models.__dict__[arch](num_classes=1000,
@@ -42,15 +49,23 @@ def factory(arch, dilation=1):
 
     # As utilizing the pretrained_model on 224 image, 
     # when applied on 448 images, please set the corresponding [dilation]
-    set_dilation(model, dilation)
+    #set_dilation(model, dilation)
+    if 'resnet' in arch:
+        return ResNet(model), model.fc.in_features
+    elif arch == 'densenet_places':
+        return model.features, model.classifier.in_features
+    else:
+        raise ValueError
 
-    return model
-
+def set_dilation(model, dilation=1):
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            m.dilation = (dilation, dilation)
+            m.padding = tuple([item * dilation for item in m.padding])
 
 class ResNet(nn.Module):
-    def __init__(self, arch, pooling=False):
+    def __init__(self, convnet):
         super(ResNet, self).__init__()
-        convnet = factory(arch)
         self.conv1 = convnet.conv1
         self.bn1 = convnet.bn1
         self.relu = convnet.relu
@@ -59,7 +74,6 @@ class ResNet(nn.Module):
         self.layer2 = convnet.layer2
         self.layer3 = convnet.layer3
         self.layer4 = convnet.layer4
-        self.pooling = pooling
 
     def forward(self, x):
         x = self.conv1(x)
@@ -70,18 +84,4 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-        if self.pooling:
-            x = F.avg_pool2d(x, (x.size(2), x.size(3)))
-            x = x.view(x.size(0), -1)
         return x
-
-    def set_trainable(self, trainable=False):
-        set_trainable(self, False)
-        if trainable:
-            set_trainable(self.layer4, True)
-
-def set_dilation(model, dilation=2):
-    for m in model.modules():
-        if isinstance(m, nn.Conv2d):
-            m.dilation = (dilation, dilation)
-            m.padding = tuple([item * dilation for item in m.padding])
