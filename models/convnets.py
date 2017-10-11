@@ -30,12 +30,12 @@ def factory(arch, dilation=1):
         model = pytorch_models.__dict__[arch](pretrained=True)
 
     elif arch == 'densenet_places':
-        if not os.acess('./data/models/whole_densenet161_places365.pth.tar', os.R_OK):
+        if not os.access('./data/models/densenet161_places365.pth3.tar', os.R_OK):
             os.system('mkdir -p ./data/models/')
-            os.system('wget http://places2.csail.mit.edu/models_places365/whole_densenet161_places365.pth.tar')
-            os.system('mv whole_densenet161_places365.pth.tar ./data/models/whole_densenet161_places365.pth.tar')
+            os.system('wget https://www.dropbox.com/s/m8lraqezvu4hlax/densenet161_places365.pth3.tar?dl=0')
+            os.system('mv densenet161_places365.pth3.tar ./data/models/')
 
-        model = torch.load('./data/models/whole_densenet161_places365.pth.tar')
+        model = torch.load('./data/models/densenet161_places365.pth3.tar')
 
     elif arch == 'fbresnet152':
         model = torch7_models.__dict__[arch](num_classes=1000,
@@ -49,7 +49,7 @@ def factory(arch, dilation=1):
 
     # As utilizing the pretrained_model on 224 image, 
     # when applied on 448 images, please set the corresponding [dilation]
-    #set_dilation(model, dilation)
+    set_dilation(model, dilation)
     if 'resnet' in arch:
         return ResNet(model), model.fc.in_features
     elif arch == 'densenet_places':

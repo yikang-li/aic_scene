@@ -12,7 +12,7 @@ import torch.backends.cudnn as cudnn
 
 from lib import utils,logger, engine
 import lib.datasets as datasets
-from models.utils import adjust_optimizer
+from models.utils import adjust_optimizer, set_trainable
 
 # task specific package
 import models
@@ -126,7 +126,7 @@ def main():
         print('Loading saved model...')
         args.start_epoch, best_acc3, exp_logger = load_checkpoint(model,#model.module, optimizer,
             os.path.join(options['logs']['dir_logs'], args.resume))
-        model.features.set_trainable(True)
+        set_trainable(model.features, False)
         optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
                     lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
                     momentum=0.9)
@@ -148,7 +148,7 @@ def main():
             yaml.dump(vars(args), f, default_flow_style=False)
 
         print('Fix the pretrained parameters for one epoch')
-        model.features.set_trainable(False)
+        set_trainable(model.features, False)
         optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()), 
                         lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'])
 
@@ -168,7 +168,9 @@ def main():
     if args.evaluate:
         print('Start evaluating...')
         path_logger_json = os.path.join(options['logs']['dir_logs'], 'logger.json')
-
+        acc1, acc3 = engine.validate(val_loader, model,
+                                                exp_logger, args.start_epoch, args.print_freq)
+        pdb.set_trace()
         evaluate_result = engine.evaluate(test_loader, model, exp_logger, args.print_freq)
     
         save_results(evaluate_result, args.start_epoch, testset.split,
@@ -224,7 +226,7 @@ def main():
             raise NotImplementedError
 
         if epoch == 0 and not args.resume:
-            model.module.features.set_trainable(True)
+            set_trainable(model.module.features, False)
             optimizer = torch.optim.SGD(params=filter(lambda p: p.requires_grad, model.parameters()), 
                     lr=options['optim']['lr'], weight_decay=options['optim']['weight_decay'], 
                     momentum=0.9)

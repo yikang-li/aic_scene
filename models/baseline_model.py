@@ -5,14 +5,14 @@ import torch.nn.functional as F
 from .convnets import factory
 from .utils import FC
 
+import pdb
 
 class Baseline_v1(nn.Module):
 
     def __init__(self, opts):
         super(Baseline_v1, self).__init__()
-        self.features, dim_h = factory(opts['conv_arch'])
-        self.classifier = FC(2048, dim_h, relu=False)
-        self.features.set_trainable(True)
+        self.features, dim_h = factory(opts['conv_arch'], dilation=opts.get('dilation', 1))
+        self.classifier = FC(dim_h, 80, relu=False)
         self.opts = opts
         self.pooling = self.opts['pooling']
 

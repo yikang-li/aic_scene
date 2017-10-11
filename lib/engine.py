@@ -141,10 +141,10 @@ def evaluate(loader, model, logger, epoch=0, print_freq=100):
         input_visual = Variable(sample['visual'].cuda(), volatile=True)
         # compute output
         output =  model(input_visual)
-        top3_result = output.cpu().data.topk(3, 1, largest=True, sorted=True)[0]
+        top3_result = output.cpu().data.topk(3, 1, largest=True, sorted=True)[1]
         for j in range(batch_size):
-            result = {'image_id': sample['image_id'], 
-                      'label_id': [top3_result[j].tolist()]}
+            result = {'image_id': sample['image_id'][j], 
+                      'label_id': top3_result[j].tolist()}
             results.append(result)
         # measure elapsed time
         meters['batch_time'].update(time.time() - end, n=batch_size)
