@@ -1,3 +1,9 @@
+# Baseline for AI Challenger Scene Classification challenge
+
+This is a project framework for AI Challenger Scene Classification Challenge with Python 3 and PyTorch. Densenet and Resnet Baseline methods are included. If you have any problems, please feel free to [email me](mailto:allen.li.thu@gmail.com). 
+
+For more information about me, please explore my [homepage](http://www.cvboy.com/)
+
 ## Setup
 
 ### Requirement 
